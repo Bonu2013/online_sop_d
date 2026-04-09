@@ -1,29 +1,51 @@
 import os
 import asyncpg
+import logging
+
+# Loglarni ko'rish uchun sozlama
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
         self.pool = None
 
     async def connection(self):
+        """Baza bilan ulanishni o'rnatish"""
         dsn = os.getenv("DATABASE_URL")
-        print(f"DEBUG: DATABASE_URL qiymati: {dsn}") # Buni logda ko'rasiz
-
+        
         if dsn:
+            # Railway uchun postgres:// -> postgresql:// o'zgarishi
             if dsn.startswith("postgres://"):
                 dsn = dsn.replace("postgres://", "postgresql://", 1)
-            self.pool = await asyncpg.create_pool(dsn=dsn)
-            print("Railway bazasiga ulanishga harakat qilindi.")
+            
+            try:
+                # SSL ulanish cloud bazalar uchun juda muhim
+                self.pool = await asyncpg.create_pool(
+                    dsn=dsn,
+                    ssl="require", # Railway va tashqi ulanishlar uchun shart
+                    min_size=1,
+                    max_size=10
+                )
+                logger.info("Railway bazasiga muvaffaqiyatli ulanish o'rnatildi.")
+            except Exception as e:
+                logger.error(f"Railway ulanishida xatolik: {e}")
         else:
-            print("DATABASE_URL topilmadi! Localhostga ulanishga majburmiz.")
-            from config import config
-            self.pool = await asyncpg.create_pool(
-                host=config.DB_HOST,
-                port=config.DB_PORT,
-                user=config.DB_USER,
-                password=config.DB_PASSWORD,
-                database=config.DB_NAME,
-        )
+            logger.warning("DATABASE_URL topilmadi! Localhostga ulanish boshlanmoqda.")
+            try:
+                from config import config
+                self.pool = await asyncpg.create_pool(
+                    host=config.DB_HOST,
+                    port=config.DB_PORT,
+                    user=config.DB_USER,
+                    password=config.DB_PASSWORD,
+                    database=config.DB_NAME,
+                )
+                logger.info("Localhost bazasiga ulanish o'rnatildi.")
+            except Exception as e:
+                logger.error(f"Localhost ulanishida xatolik: {e}")
+
+    # --- FOYDALANUVCHI METODLARI ---
 
     async def add_user(self, telegram_id, name, surname, age, phone_number):
         query = """
@@ -53,18 +75,14 @@ class Database:
         query = "SELECT name, surname, role, id FROM users ORDER BY id;"
         return await self.pool.fetch(query)
 
-    async def get_users_telegram_id(self):
-        query = "SELECT telegram_id FROM users ORDER BY id;"
-        return await self.pool.fetch(query)
-
     async def update_role(self, user_id, role):
         query = "UPDATE users SET role = $1 WHERE id = $2;"
         await self.pool.execute(query, role, user_id)
 
-    # --- PRODUCT METODLARI ---
+    # --- MAHSULOT METODLARI ---
 
     async def get_products(self):
-        query = "SELECT id, name, price FROM products ORDER BY id;"
+        query = "SELECT id, name, price, description FROM products ORDER BY id;"
         return await self.pool.fetch(query)
 
     async def add_product(self, name, price, description):
@@ -75,14 +93,10 @@ class Database:
         query = "DELETE FROM products WHERE id = $1;"
         await self.pool.execute(query, product_id)
 
-    async def update_product(self, product_id, name, price, description):
-        query = "UPDATE products SET name = $1, price = $2, description = $3 WHERE id = $4;"
-        await self.pool.execute(query, name, price, description, product_id)
-
-    # --- CART (SAVATCHA) METODLARI ---
+    # --- SAVATCHA (CART) VA BUYURTMA ---
 
     async def get_or_create_cart(self, user_id):
-        # Mavjud savatchani tekshirish
+        """Foydalanuvchi uchun ochiq savat topish yoki yaratish"""
         order = await self.pool.fetchrow(
             "SELECT id FROM orders WHERE user_id = $1 AND order_status = 'cart';",
             user_id
@@ -90,9 +104,8 @@ class Database:
         if order:
             return order["id"]
 
-        # Yangi savatcha yaratish
         return await self.pool.fetchval(
-            "INSERT INTO orders(user_id) VALUES($1) RETURNING id;",
+            "INSERT INTO orders(user_id, order_status) VALUES($1, 'cart') RETURNING id;",
             user_id
         )
 
@@ -114,6 +127,7 @@ class Database:
         return await self.pool.fetch(query, user_id)
 
     async def remove_one_product(self, user_id, product_id):
+        """Savatchadan bitta mahsulotni o'chirish"""
         query = """
         DELETE FROM order_items
         WHERE id = (
@@ -138,10 +152,12 @@ class Database:
         return products, total or 0
 
     async def confirm_order(self, user_id):
+        """Savatchani 'completed' holatiga o'tkazish (buyurtma berish)"""
         query = "UPDATE orders SET order_status = 'completed' WHERE user_id = $1 AND order_status = 'cart';"
         await self.pool.execute(query, user_id)
 
     async def get_user_order_history(self, user_id):
+        """Sotib olingan barcha mahsulotlar tarixi"""
         query = """
         SELECT o.id AS order_id, p.name, p.price
         FROM orders o
