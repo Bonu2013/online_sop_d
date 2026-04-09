@@ -37,9 +37,9 @@ async def zakaz(call:CallbackQuery,db):
     text = "🛒 Buyurtmangiz:\n\n"
 
     for product in products:
-        text += f"• {product['name']} - {product['price']} so'm\n"
+        text += f" {product['name']} - {product['price']} so'm\n"
 
-    text += f"\n💰 Umumiy narx: {total} so'm"
+    text += f"\nUmumiy narx: {total} so'm"
 
     await call.message.answer(
         text,
@@ -65,7 +65,7 @@ async def pay_cash(call: CallbackQuery,db):
     await db.confirm_order(user_id)
 
     await call.message.answer(
-        "✅ Buyurtmangiz qabul qilindi!\n"
+        "Buyurtmangiz qabul qilindi!\n"
         "Courier yetkazib berganda naqd to'laysiz."
     )
 
@@ -75,12 +75,12 @@ async def nun(msg:Message,db):
     orders = await db.get_user_order_history(user_id)
 
     for order_id, data in orders.items():
-        text = f"📦 Order #{order_id}\n"
+        text = f" Order #{order_id}\n"
 
         for p in data["products"]:
             text += f"- {p['name']} ({p['price']} so'm)\n"
 
-        text += f"\n💰 Total: {data['total']} so'm"
+        text += f"\nTotal: {data['total']} so'm"
 
         await msg.answer(text=text)
     

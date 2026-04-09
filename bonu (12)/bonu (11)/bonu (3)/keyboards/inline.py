@@ -44,13 +44,13 @@ def payment_keyboard():
     keyboard = [
         [
             InlineKeyboardButton(
-                text="💳 Karta orqali to'lov",
+                text="Karta orqali to'lov",
                 callback_data="pay_card"
             )
         ],
         [
             InlineKeyboardButton(
-                text="💵 Naqd to'lov",
+                text="Naqd to'lov",
                 callback_data="pay_cash"
             )
         ]

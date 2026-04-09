@@ -2,19 +2,36 @@ import asyncpg
 from config import config
 
 
+import os
+import asyncpg
+# config importini olib tashlasangiz ham bo'ladi, agar faqat DB uchun ishlatsangiz
+
 class Database:
     def __init__(self):
         self.pool = None
 
     async def connection(self):
-        self.pool = await asyncpg.create_pool(
-            host=config.DB_HOST,
-            port=config.DB_PORT,
-            user=config.DB_USER,
-            password=config.DB_PASSWORD,
-            database=config.DB_NAME,
-        )
-    
+        # Railway'da DATABASE_URL avtomatik beriladi
+        # Agar u bo'lmasa, config'dan olishga harakat qiladi
+        dsn = os.getenv("DATABASE_URL")
+        
+        if not dsn:
+            # Lokalda ishlash uchun eski usul
+            from config import config
+            self.pool = await asyncpg.create_pool(
+                host=config.DB_HOST,
+                port=config.DB_PORT,
+                user=config.DB_USER,
+                password=config.DB_PASSWORD,
+                database=config.DB_NAME,
+            )
+        else:
+            # Railway ulanish qatoridagi 'postgres://' ni 'postgresql://' ga o'zgartirish
+            # Chunki asyncpg faqat 'postgresql://' bilan ishlaydi
+            if dsn.startswith("postgres://"):
+                dsn = dsn.replace("postgres://", "postgresql://", 1)
+            
+            self.pool = await asyncpg.create_pool(dsn=dsn)
     async def add_user(self,telegram_id,name,surname,age,phone_number):
         query="""
         insert into users(telegram_id,name,surname,age,phone_number) values($1,$2,$3,$4,$5);

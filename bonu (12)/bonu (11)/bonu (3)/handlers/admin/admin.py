@@ -70,7 +70,7 @@ async def broadcasting(bot, users, message):
 @router.message(F.text == "Reklama", RoleFilter("admin"))
 async def reklama(msg: Message, state: FSMContext):
     
-    await msg.answer("📢 Reklama yuborish uchun rasm, video yoki matn yuboring:")
+    await msg.answer(" Reklama yuborish uchun rasm, video yoki matn yuboring:")
     
     await state.set_state(AdsState.waiting_for_ads)
 
@@ -85,8 +85,8 @@ async def reklama(msg:Message,state:FSMContext,db):
     )
 
     await msg.answer(
-        f"📊 Reklama natijasi:\n"
-        f"✅ Yuborildi: {success}\n"
-        f"❌ Yuborilmadi: {failed}"
+        f"Reklama natijasi:\n"
+        f"Yuborildi: {success}\n"
+        f" Yuborilmadi: {failed}"
     )
     await state.clear()
