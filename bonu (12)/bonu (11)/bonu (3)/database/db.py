@@ -6,33 +6,24 @@ class Database:
         self.pool = None
 
     async def connection(self):
-        """Ma'lumotlar bazasiga ulanishni o'rnatish"""
-        # Railway'da DATABASE_URL avtomatik beriladi
         dsn = os.getenv("DATABASE_URL")
-        
+        print(f"DEBUG: DATABASE_URL qiymati: {dsn}") # Buni logda ko'rasiz
+
         if dsn:
-            # asyncpg faqat 'postgresql://' bilan ishlaydi, Railway esa ba'zan 'postgres://' beradi
             if dsn.startswith("postgres://"):
                 dsn = dsn.replace("postgres://", "postgresql://", 1)
-            
             self.pool = await asyncpg.create_pool(dsn=dsn)
-            print("Database: Railway bazasiga muvaffaqiyatli ulandi.")
+            print("Railway bazasiga ulanishga harakat qilindi.")
         else:
-            # Lokal kompyuterda ishlash uchun sozlamalar
-            try:
-                from config import config
-                self.pool = await asyncpg.create_pool(
-                    host=config.DB_HOST,
-                    port=config.DB_PORT,
-                    user=config.DB_USER,
-                    password=config.DB_PASSWORD,
-                    database=config.DB_NAME,
-                )
-                print("Database: Lokal bazaga ulandi.")
-            except ImportError:
-                print("Xato: DATABASE_URL topilmadi va config fayli mavjud emas.")
-
-    # --- USER METODLARI ---
+            print("DATABASE_URL topilmadi! Localhostga ulanishga majburmiz.")
+            from config import config
+            self.pool = await asyncpg.create_pool(
+                host=config.DB_HOST,
+                port=config.DB_PORT,
+                user=config.DB_USER,
+                password=config.DB_PASSWORD,
+                database=config.DB_NAME,
+        )
 
     async def add_user(self, telegram_id, name, surname, age, phone_number):
         query = """
