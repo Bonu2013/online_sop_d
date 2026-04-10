@@ -15,11 +15,11 @@ class Database:
             database=config.DB_NAME,
         )
     
-    async def add_user(self,telegram_id,name,surename,age,phone_number):
+    async def add_user(self,telegram_id,name,surname,age,phone_number):
         query="""
-        insert into users(telegram_id,name,surename,age,phone_number) values($1,$2,$3,$4,$5);
+        insert into users(telegram_id,name,surname,age,phone_number) values($1,$2,$3,$4,$5);
         """
-        await self.pool.execute(query,telegram_id,name,surename,age,phone_number)
+        await self.pool.execute(query,telegram_id,name,surname,age,phone_number)
 
     
     async def is_user_exists(self, telegram_id: int) -> bool:
@@ -32,7 +32,7 @@ class Database:
     
     async def profile(self,tg_id):
         query="""
-        select name,surename,age,phone_number,role from users where telegram_id=$1;
+        select name,surname,age,phone_number,role from users where telegram_id=$1;
         """
         return await self.pool.fetchrow(query,tg_id)
     
@@ -48,7 +48,7 @@ class Database:
     
     async def get_users(self):
         query="""
-        select name,surename,role,id from users order by id;
+        select name,surname,role,id from users order by id;
         """
         return await self.pool.fetch(query)
     
