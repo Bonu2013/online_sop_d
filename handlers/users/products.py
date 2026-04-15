@@ -4,12 +4,17 @@ from filters.adminfilter import RoleFilter
 from keyboards.inline import savat_inline,payment_keyboard
 router=Router()
 
-@router.callback_query(F.data.startswith("product_"),RoleFilter('user'))
-async def product(call:CallbackQuery,db):
-    product_id= int(call.data.split("_")[1])
-    user_id= await db.get_user_id(call.from_user.id)
-    await db.add_product_to_cart(user_id,product_id)
-    await call.answer("Mahsulot savatga qo'shildi")
+
+@router.callback_query(F.data.startswith("product_"))
+async def add_to_cart_handler(call: CallbackQuery, db):
+    product_id = int(call.data.split("_")[1])
+    user_id = await db.get_user_id(call.from_user.id)
+    
+    if user_id:
+        await db.add_product_to_cart(user_id, product_id)
+        await call.answer("Mahsulot savatga qo'shildi! ✅", show_alert=True)
+    else:
+        await call.answer("Xatolik: Avval ro'yxatdan o'ting!", show_alert=True)
 
 @router.message(F.text=="Savatcha")
 async def savatcha(msg:Message,db):
