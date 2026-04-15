@@ -4,7 +4,7 @@ def users_inline(users):
     keyboards=[]
 
     for user in users:
-        keyboards.append([InlineKeyboardButton(text=f"{user["name"]} {user["surename"]}({user["role"]})",callback_data=f"user_{user["id"]}")])
+        keyboards.append([InlineKeyboardButton(text=f"{user["name"]} {user["surname"]}({user["role"]})",callback_data=f"user_{user["id"]}")])
     
     return InlineKeyboardMarkup(inline_keyboard=keyboards)
 
