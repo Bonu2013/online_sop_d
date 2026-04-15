@@ -14,7 +14,7 @@ class Database:
             database=config.DB_NAME,
         )
     
-    # --- USERS ---
+  
     async def add_user(self, telegram_id, name, surname, age, phone_number):
         query = """
         INSERT INTO users(telegram_id, name, surname, age, phone_number) 
@@ -50,7 +50,7 @@ class Database:
         query = "UPDATE users SET role=$1 WHERE id=$2;"
         await self.pool.execute(query, role, user_id)
     
-    # --- PRODUCTS ---
+    
     async def get_products(self):
         query = "SELECT id, name, price FROM products ORDER BY id;"
         return await self.pool.fetch(query)
@@ -67,7 +67,7 @@ class Database:
         query = "UPDATE products SET name=$1, price=$2, description=$3 WHERE id=$4;"
         await self.pool.execute(query, name, price, description, product_id)
     
-    # --- CART & ORDERS ---
+    
     async def get_or_create_cart(self, user_id):
         order = await self.pool.fetchrow(
             "SELECT id FROM orders WHERE user_id=$1 AND order_status='cart'", 
@@ -126,7 +126,7 @@ class Database:
         return products, total
     
     async def confirm_order(self, user_id):
-        # Faqat savatdagi (cart) statusni o'zgartiradi
+       
         query = "UPDATE orders SET order_status='completed' WHERE user_id=$1 AND order_status='cart';"
         await self.pool.execute(query, user_id)
 
@@ -148,3 +148,4 @@ class Database:
             orders[oid]["products"].append({"name": row["name"], "price": row["price"]})
             orders[oid]["total"] += row["price"]
         return orders
+    # 

@@ -8,37 +8,37 @@ from aiogram.fsm.context import FSMContext
 
 router = Router()
 
-# Admin panelga kirish
+
 @router.message(F.text == "Admin panel", RoleFilter('admin'))
 async def admin(msg: Message):
     await msg.answer(text="Admin panelga xush kelibsiz:", reply_markup=admin_panel())
 
-# Foydalanuvchilar ro'yxatini ko'rish
+
 @router.message(F.text == "Users", RoleFilter('admin'))
 async def user(msg: Message, db):
     users = await db.get_users()
     await msg.answer("Foydalanuvchilar ro'yxati:", reply_markup=users_inline(users))
 
-# Mahsulotlarni yangilash funksiyasi
+
 @router.message(F.text == "Mahsulotlarni yangilash", RoleFilter('admin'))
 async def refresh_products(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Mahsulotlar ro'yxati yangilandi!", reply_markup=admin_panel())
 
-# Orqaga qaytish funksiyasi
+
 @router.message(F.text == "Orqaga", RoleFilter('admin'))
 async def back_handler(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("Asosiy menyuga qaytdingiz", reply_markup=admin_panel())
+    await message.answer("Asosiy menyuga qaytdinz", reply_markup=admin_panel())
 
-# Foydalanuvchi bosilganda rolni tanlash
+
 @router.callback_query(F.data.startswith("user_"), RoleFilter('admin'))
 async def user_callback(call: CallbackQuery):
     user_id = int(call.data.split("_")[1])
     await call.message.answer("User rolini tanlang:", reply_markup=user_action(user_id))
     await call.answer()
 
-# Rolni o'zgartirish
+
 @router.callback_query(F.data.startswith("changeto_"), RoleFilter('admin'))
 async def change_role(call: CallbackQuery, db): 
     data = call.data.split("_")
@@ -48,7 +48,7 @@ async def change_role(call: CallbackQuery, db):
     await call.message.answer(f"Foydalanuvchi roli '{role}'ga o'zgartirildi!")
     await call.answer()
 
-# Reklama yuborish funksiyasi (Broadcasting)
+
 async def broadcasting(bot, users, message: Message):
     success = 0
     failed = 0
@@ -81,13 +81,13 @@ async def broadcasting(bot, users, message: Message):
             
     return success, failed
 
-# Reklama buyrug'ini qabul qilish
+
 @router.message(F.text == "Reklama", RoleFilter("admin"))
 async def start_reklama(msg: Message, state: FSMContext):
     await msg.answer("Reklama yuborish uchun rasm, video yoki matn yuboring:")
     await state.set_state(AdsState.waiting_for_ads)
 
-# Reklamani tarqatish
+
 @router.message(AdsState.waiting_for_ads)
 async def process_reklama(msg: Message, state: FSMContext, db):
     users = await db.get_users_telegram_id() 
@@ -95,8 +95,9 @@ async def process_reklama(msg: Message, state: FSMContext, db):
 
     await msg.answer(
         f"Reklama natijasi:\n"
-        f"✅ Yuborildi: {success}\n"
-        f"❌ Yuborilmadi: {failed}",
+        f"Yuborildi: {success}\n"
+        f"Yuborilmadi: {failed}",
         reply_markup=admin_panel()
     )
     await state.clear()
+ 
