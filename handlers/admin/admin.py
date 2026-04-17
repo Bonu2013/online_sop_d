@@ -29,8 +29,8 @@ async def refresh_products(message: Message, state: FSMContext):
 @router.message(F.text == "Orqaga", RoleFilter('admin'))
 async def back_handler(message: Message, state: FSMContext):
     await state.clear()
-    from keyboards.reply import main_menu 
-    await message.answer("Asosiy menyuga qaytdingiz", reply_markup=main_menu())
+    from keyboards.reply import admin_panel 
+    await message.answer("Asosiy menyuga qaytdingiz", reply_markup=admin_panel())
 
 @router.callback_query(F.data.startswith("user_"), RoleFilter('admin'))
 async def user_callback(call: CallbackQuery):
